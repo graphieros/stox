@@ -7,6 +7,11 @@ const routes = [
     name: "Home",
     component: Home,
   },
+  {
+    path: "/charts",
+    name: "Charts",
+    component: () => import("../views/Charts.vue"),
+  },
 ];
 
 const router = createRouter({

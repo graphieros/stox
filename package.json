@@ -8,8 +8,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mdi/font": "^6.5.95",
+    "apexcharts": "^3.33.0",
     "vue": "^3.2.25",
     "vue-router": "^4.0.12",
+    "vue3-apexcharts": "^1.4.1",
     "vuex": "^4.0.2",
     "wave-ui": "^2.30.0"
   },
