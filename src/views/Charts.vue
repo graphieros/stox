@@ -4,6 +4,7 @@ import fetchStock from "../functions/fetchStock";
 import { store } from "../store";
 import Chart from "../components/charts/Chart.vue";
 import functions from "../functions";
+import { UnknownObj } from "../types";
 
 let isLoaded = ref(false);
 
@@ -24,18 +25,18 @@ const dataSet = computed(() => {
   return store.state.dataSet;
 });
 
-const timeSeries = computed(() => {
-  const ts = dataSet.value.timeSeries;
+const timeSeries = computed<any>(() => {
+  const series = dataSet.value.timeSeries;
   return (
-    Object.keys(ts)
+    Object.keys(series)
       .reverse()
-      .map((key) => [key, ts[key]]) || []
+      .map((key) => [key, series[key]]) || []
   );
 });
 
 const dataSourceOHLC = computed<any>(() => {
-  const OHLC = timeSeries.value
-    .map((el, i) => {
+  const OHLC: string[][] = timeSeries.value
+    .map((el: { [x: string]: any }[]) => {
       return [
         el[1]["1. open"],
         el[1]["2. high"],
@@ -44,6 +45,7 @@ const dataSourceOHLC = computed<any>(() => {
       ];
     })
     .slice(-Number(rangeSelection.value));
+
   const timeOHLC = [...timeSeries.value]
     .map((el) => new Date(el[0]).getTime())
     .slice(-Number(rangeSelection.value));
@@ -56,7 +58,7 @@ const dataSourceOHLC = computed<any>(() => {
   });
 });
 
-const candleOptions = ref({});
+const candleOptions = ref<UnknownObj>({});
 
 let candleSeries = ref([
   {
@@ -65,7 +67,7 @@ let candleSeries = ref([
   },
 ]);
 
-function updateCharts(time: number) {
+function updateCharts(time: number): void {
   const title = () => {
     const stockName = dataSet.value.metaData["2. Symbol"];
     const stockInfo = dataSet.value.metaData["1. Information"];
@@ -174,10 +176,13 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+#stox-chart {
+  max-width: 650px;
+}
 .charts {
+  background: radial-gradient(at top, var((--blue)), white);
   height: 100%;
   padding-top: 60px;
-  background: radial-gradient(at top, var((--blue)), white);
 }
 .chart-wrapper {
   display: flex;
@@ -188,13 +193,9 @@ onMounted(() => {
 }
 
 .spinner {
+  left: 50%;
   position: absolute;
   top: 50%;
-  left: 50%;
   transform: translate(-50%, -50%);
-}
-
-#stox-chart {
-  max-width: 650px;
 }
 </style>

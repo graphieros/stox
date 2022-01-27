@@ -8,3 +8,8 @@ export interface StoreProp {
   value?: string | number;
   val?: string | number | object | UnknownObj;
 }
+
+export interface DataSet {
+  metaData: UnknownObj;
+  timeSeries: number[];
+}
