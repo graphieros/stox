@@ -3,6 +3,9 @@ import { ref, computed, onMounted } from "vue";
 import fetchStock from "../functions/fetchStock";
 import { store } from "../store";
 import Chart from "../components/charts/Chart.vue";
+import functions from "../functions";
+
+let isLoaded = ref(false);
 
 const dataSet = computed(() => {
   return store.state.dataSet;
@@ -19,46 +22,96 @@ const timeSeries = computed(() => {
 
 const volume = computed(() => {
   return timeSeries.value.map((el) => {
-    return el[1]["1. open"];
+    return el[1]["5. volume"];
   });
 });
 
-const options = ref({});
-let isLoaded = ref(false);
+const dataSourceOHLC = computed<any>(() => {
+  const OHLC = timeSeries.value.map((el, i) => {
+    return [
+      el[1]["1. open"],
+      el[1]["2. high"],
+      el[1]["3. low"],
+      el[1]["4. close"],
+    ];
+  });
+  const timeOHLC = [...timeSeries.value].map((el) => new Date(el[0]).getTime());
 
-let series = ref([
+  return OHLC.map((el, i) => {
+    return {
+      x: functions.toFrenchDate(timeOHLC[i]),
+      y: el,
+    };
+  });
+});
+
+const candleOptions = ref({});
+
+let candleSeries = ref([
   {
-    name: "Volume",
-    data: [...volume.value],
+    name: "Loading...",
+    data: [0],
   },
 ]);
 
 function updateCharts() {
+  const title = () => {
+    const stockName = dataSet.value.metaData["2. Symbol"];
+    const stockInfo = dataSet.value.metaData["1. Information"];
+    return `${stockName} - ${stockInfo}`;
+  };
+
   setTimeout(() => {
-    series.value = [
+    candleSeries.value = [
       {
-        name: "Volume",
-        data: [...volume.value],
+        name: "High",
+        data: dataSourceOHLC.value,
       },
     ];
-    options.value = {
-      ...options.value,
+    candleOptions.value = {
+      ...candleOptions.value,
       chart: {
-        id: "vuechart-example",
+        id: "candles",
         height: 300,
       },
+      plotOptions: {
+        candlestick: {
+          colors: {
+            upward: "#1B3366",
+            downward: "#FF6347",
+          },
+        },
+      },
+
       dataLabels: {
         enabled: false,
       },
       xaxis: {
-        categories: [...timeSeries.value].map((el) =>
-          new Date(el[0]).toLocaleTimeString()
-        ),
+        labels: {
+          style: {
+            fontSize: "8px",
+          },
+        },
       },
       noData: {
         text: "Loading...",
       },
+      title: {
+        text: title(),
+        align: "left",
+        margin: 10,
+        offsetX: 0,
+        offsetY: 0,
+        floating: false,
+        style: {
+          fontSize: "14px",
+          fontWeight: "bold",
+          fontFamily: "Times New Roman",
+          color: "#263238",
+        },
+      },
     };
+
     isLoaded.value = true;
   }, 1500);
 }
@@ -84,15 +137,14 @@ onMounted(() => {
     </w-flex>
 
     <w-flex wrap v-if="isLoaded">
-      <w-flex class="xs12 md6 pa10">
-        <w-card class="chart-wrapper">
-          <Chart chartType="area" :options="options" :series="series" />
-        </w-card>
-      </w-flex>
-      <w-flex class="xs12 md6 pa10">
-        <w-card class="chart-wrapper">
-          <Chart chartType="line" :options="options" :series="series" />
-        </w-card>
+      <w-flex class="xs12 pa10">
+        <div class="chart-wrapper">
+          <Chart
+            chartType="candlestick"
+            :options="candleOptions"
+            :series="candleSeries"
+          />
+        </div>
       </w-flex>
     </w-flex>
   </div>
@@ -100,12 +152,15 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .charts {
+  height: 100%;
   padding-top: 60px;
+  background: radial-gradient(at top, var((--blue)), white);
 }
 .chart-wrapper {
+  display: flex;
+  justify-content: center;
   align-items: center;
   position: relative;
-
   width: 100%;
 }
 

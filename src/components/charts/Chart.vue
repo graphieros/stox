@@ -23,7 +23,8 @@ let windowWidth = ref(0);
 <template>
   <div class="chart">
     <apexchart
-      :width="isMobile ? '100%' : windowWidth / 2.5"
+      :width="windowWidth * 0.7"
+      height="400"
       :type="chartType"
       :options="options"
       :series="series"
@@ -33,6 +34,13 @@ let windowWidth = ref(0);
 
 <style lang="scss">
 .chart {
-  background: white;
+  padding: 20px;
+  background: radial-gradient(at top, rgba(255, 255, 255, 0.356), white);
+  border-radius: 3px;
+  box-shadow: 0px 10px 20px -10px var(--blue);
+  svg {
+    background: white !important;
+    border-radius: 3px !important;
+  }
 }
 </style>
