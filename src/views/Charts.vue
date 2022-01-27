@@ -7,6 +7,19 @@ import functions from "../functions";
 
 let isLoaded = ref(false);
 
+const dataRanges = [
+  { label: "5" },
+  { label: "10" },
+  { label: "15" },
+  { label: "20" },
+  { label: "30" },
+  { label: "50" },
+  { label: "75" },
+  { label: "100" },
+];
+
+let rangeSelection = ref<string | number>();
+
 const dataSet = computed(() => {
   return store.state.dataSet;
 });
@@ -20,27 +33,25 @@ const timeSeries = computed(() => {
   );
 });
 
-const volume = computed(() => {
-  return timeSeries.value.map((el) => {
-    return el[1]["5. volume"];
-  });
-});
-
 const dataSourceOHLC = computed<any>(() => {
-  const OHLC = timeSeries.value.map((el, i) => {
-    return [
-      el[1]["1. open"],
-      el[1]["2. high"],
-      el[1]["3. low"],
-      el[1]["4. close"],
-    ];
-  });
-  const timeOHLC = [...timeSeries.value].map((el) => new Date(el[0]).getTime());
+  const OHLC = timeSeries.value
+    .map((el, i) => {
+      return [
+        el[1]["1. open"],
+        el[1]["2. high"],
+        el[1]["3. low"],
+        el[1]["4. close"],
+      ];
+    })
+    .slice(-Number(rangeSelection.value));
+  const timeOHLC = [...timeSeries.value]
+    .map((el) => new Date(el[0]).getTime())
+    .slice(-Number(rangeSelection.value));
 
-  return OHLC.map((el, i) => {
+  return OHLC.map((ohlc, i) => {
     return {
       x: functions.toFrenchDate(timeOHLC[i]),
-      y: el,
+      y: ohlc,
     };
   });
 });
@@ -54,7 +65,7 @@ let candleSeries = ref([
   },
 ]);
 
-function updateCharts() {
+function updateCharts(time: number) {
   const title = () => {
     const stockName = dataSet.value.metaData["2. Symbol"];
     const stockInfo = dataSet.value.metaData["1. Information"];
@@ -113,26 +124,38 @@ function updateCharts() {
     };
 
     isLoaded.value = true;
-  }, 1500);
+  }, time);
 }
 
 onMounted(() => {
   fetchStock();
-  updateCharts();
+  updateCharts(1500);
 });
 </script>
 
 <template>
   <div class="charts">
     <w-flex class="my5 justify-center align-center">
-      <w-button
-        v-if="isLoaded"
-        @click="
-          fetchStock();
-          updateCharts();
-        "
-        ><w-icon class="mr1">mdi mdi-reload</w-icon>Actualiser</w-button
-      >
+      <div v-if="isLoaded">
+        <w-button
+          @click="
+            fetchStock();
+            updateCharts(1500);
+          "
+          ><w-icon class="mr1">mdi mdi-reload</w-icon>Actualiser</w-button
+        >
+        <w-select
+          class="mt5"
+          :items="dataRanges"
+          bg-color="blue-light5"
+          color="blue-dark3"
+          v-model="rangeSelection"
+          @input="updateCharts(1)"
+        >
+          Nombre de données
+        </w-select>
+      </div>
+
       <w-spinner v-else />
     </w-flex>
 
